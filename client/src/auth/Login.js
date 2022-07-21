@@ -1,34 +1,44 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import { login } from '../actions/auth';
+import  {login}  from '../actions/auth';
 import LoginForm from '../components/LoginForm';
+import {useDispatch} from 'react-redux';
 
 
-
-const Login = () => {
+const Login = ({history}) => {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
+
+    const dispatch = useDispatch();
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        console.log("send Login data: ",{ email, password });
-
-
+        // console.log("send Login data: ",{ email, password });
         try {
-            let res = await login({email, password});
-
+            const res = await login({email, password});
+            console.log("Login response is: ",res);
             if(res.data){
                 console.log("Save user response in redux and in localstorage the  redirect ==>");
             }
-            console.log(res.data);
+            // console.log(res.data);
+            // save user and token to localstorage and redux
+            window.localStorage.setItem('auth',JSON.stringify(res.data));
 
-        } catch (error) {
-            console.log(error);
-            if(error.response.status === 400) toast.error(error.response.data);
+            dispatch({
+                type: "LOGGED_IN_USER",
+                payload: res.data
+            });
+
+            history.push("/dashboard");
+
+        } catch (err) {
+            console.log(err);
+            if(err.response.status === 400) toast.error(err.response.data);
         }
-    }
+    };
 
 
     return (
@@ -47,6 +57,6 @@ const Login = () => {
         </>
     );
 
-}
+};
 
 export default Login;

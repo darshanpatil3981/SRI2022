@@ -1,5 +1,7 @@
-import { response } from "express";
+// import { response } from "express";
 import User from "../models/user";
+import jwt from 'jsonwebtoken';
+import { response } from "express";
 
 
 export const register = async (req, res) =>{
@@ -31,21 +33,37 @@ export const login = async (req, res) => {
     const {email, password} = req.body;
     try {
         //check if user already exists
-        const user = await User.findOne({email: email}).exec();
+        let user = await User.findOne({ email }).exec();
         // console.log("User exists", user);
         if(!user) return res.status(400).send("User not found");
         
         // check if password matches
-        user.comparePassword(password,(error,match) => {
-            console.log("Compare password in login error",error);
-            if(!match || error) return res.status(400).send("Password does not match");
-            console.log("Generate a token and send response to client");
+        user.comparePassword(password,(err,match) => {
+            console.log("Compare password in login error",err);
+            if(!match || err) return res.status(400).send("Password does not match");
+            
+            // Generate a token and send response to client
+            let token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {
+                expiresIn: '60m'
+            }); 
+            console.log("Token generated successfully");
+
+            res.json({ token, user:{
+                    _id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt,
+                    stripe_account_id: user.stripe_account_id,
+                    stripe_seller: user.stripe_seller,
+                    stripeSession: user.stripeSession,
+                }
+            });
         });
 
-
         
-    } catch (error) {
-        console.log("Login failed",error);
+    } catch (err) {
+        console.log("Login failed",err);
         res.status(400).send("SignIn failed");
     }
 

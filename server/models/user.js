@@ -57,8 +57,8 @@ userSchema.methods.comparePassword = function (password,next) {
         }
         console.log("Match password: ",match);
         return next(null,match);
-    }
-)};
+    });
+};
 
 
 export default mongoose.model("User", userSchema);
